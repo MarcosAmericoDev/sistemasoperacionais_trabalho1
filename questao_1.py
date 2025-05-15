@@ -1,3 +1,5 @@
+import numpy as np
+
 class Processo:
     def __init__(self, id, chegada, burst_time):
         self.id = id
@@ -116,3 +118,60 @@ def round_robin(processos, quantum):
             tempos_espera[processo_atual_index] = tempos_retorno[processo_atual_index] - processo_atual.burst_time
 
     return sequencia_execucao, tempos_espera, tempos_retorno
+
+def calcular_metricas(sequencia, espera, retorno):
+
+    media_espera = np.mean(espera)
+    desvio_espera = np.std(espera)
+    media_retorno = np.mean(retorno)
+    desvio_retorno = np.std(retorno) 
+
+    return {
+        'media_espera' : media_espera,
+        'desvio_espera' : desvio_espera,
+        'media_retorno' : media_retorno,
+        'desvio_retorno' : desvio_retorno,
+        'sequencia_processos': sequencia
+    }
+
+def generate_process(N, max_chegada=10,max_burst=10):
+    processos=[]
+    for id in range(1,N+1):
+        tempo_chegada = np.random.randint(0,max_chegada)
+        tempo_burst = np.random.randint(1,max_burst)
+        processos.append(Processo(id,tempo_chegada,tempo_burst))
+
+    return processos
+
+N = 5
+processos = generate_process(N)
+quantums = [2,5,10]
+
+print("Processos gerados:")
+print("ID | Chegada | Burst")
+for p in processos:
+    print(f"{p.id:3} | {p.chegada:7} | {p.burst_time:5}")
+
+
+#simular FCFS
+fcfs_resultado = fcfs(processos)
+fcfs_metricas = calcular_metricas(fcfs_resultado[0], fcfs_resultado[1], fcfs_resultado[2])
+
+#simular sjf
+sjf_resultado = sjf_nao_preemptivo(processos)
+sjf_metricas = calcular_metricas(sjf_resultado[0], sjf_resultado[1], sjf_resultado[2])
+
+#simular rr por quantum
+rr_metricas = {}
+for q in quantums:
+    rr_resultado = round_robin(processos,q)
+    rr_metricas[q] = calcular_metricas(rr_resultado[0], rr_resultado[1], rr_resultado[2])
+
+    
+# Exibir resultados
+print("\nMétricas:")
+print("Algoritmo | Avg Waiting (std) | Avg Turnaround (std) | Sequencia de execução")
+print(f"FCFS      | {fcfs_metricas['media_espera']:.2f} (±{fcfs_metricas['desvio_espera']:.2f}) | {fcfs_metricas['media_retorno']:.2f} (±{fcfs_metricas['desvio_retorno']:.2f}) | {fcfs_metricas['sequencia_processos']}")
+print(f"SJF       | {sjf_metricas['media_espera']:.2f} (±{sjf_metricas['desvio_espera']:.2f}) | {sjf_metricas['media_retorno']:.2f} (±{sjf_metricas['desvio_retorno']:.2f}) | {sjf_metricas['sequencia_processos']}")
+for q in quantums:
+    print(f"RR (q={q}) | {rr_metricas[q]['media_espera']:.2f} (±{rr_metricas[q]['desvio_espera']:.2f}) | {rr_metricas[q]['media_retorno']:.2f} (±{rr_metricas[q]['desvio_retorno']:.2f}) | {rr_metricas[q]['sequencia_processos']}")
