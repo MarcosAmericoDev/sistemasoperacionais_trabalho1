@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 class Processo:
     def __init__(self, id, chegada, burst_time):
@@ -177,3 +178,23 @@ print(f"FCFS      \t| {fcfs_metricas['media_espera']:.2f}\t (±{fcfs_metricas['d
 print(f"SJF       \t| {sjf_metricas['media_espera']:.2f} \t (±{sjf_metricas['desvio_espera']:.2f})\t | {sjf_metricas['media_retorno']:.2f} (±{sjf_metricas['desvio_retorno']:.2f})\t | {sjf_metricas['vazao']:2.4f}\t | {sjf_metricas['sequencia_processos']}")
 for q in quantums:
     print(f"RR (q={q}) \t| {rr_metricas[q]['media_espera']:.2f}\t (±{rr_metricas[q]['desvio_espera']:.2f})\t | {rr_metricas[q]['media_retorno']:.2f} (±{rr_metricas[q]['desvio_retorno']:.2f})\t | {rr_metricas[q]['vazao']:2.4f}\t | {rr_metricas[q]['sequencia_processos']}")
+
+metodos = ['FCFS', 'SJF', f'RR(q={quantums[0]})', f'RR(q={quantums[1]})', f'RR(q={quantums[2]})']
+tempos = [fcfs_metricas['media_espera'], sjf_metricas['media_espera'], rr_metricas[2]['media_espera'], rr_metricas[5]['media_espera'], rr_metricas[10]['media_espera']]
+plt.bar(metodos, tempos, color='skyblue')
+plt.xlabel('métodos escolhidos')
+plt.ylabel('média de tempo de espera')
+plt.title('média tempo de espera de cada algoritmo')
+for i, value in enumerate(tempos):
+    plt.text(i, value, str(value), ha='center')
+plt.show()
+
+tempos = [fcfs_metricas['media_retorno'], sjf_metricas['media_retorno'], rr_metricas[2]['media_retorno'], rr_metricas[5]['media_retorno'], rr_metricas[10]['media_retorno']]
+plt.bar(metodos, tempos, color='skyblue')
+plt.xlabel('métodos escolhidos')
+plt.ylabel('média de tempo de retorno')
+plt.title('média tempo de retorno de cada algoritmo')
+for i, value in enumerate(tempos):
+    plt.text(i, value, str(value), ha='center')
+plt.show()
+
