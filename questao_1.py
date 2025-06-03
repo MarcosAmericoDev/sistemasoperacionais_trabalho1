@@ -22,8 +22,8 @@ def fcfs(processos):
     for i in range(n):
         processo = fila_prontos[i]
         if tempo_atual < processo.chegada:
-            tempos_espera[i] = processo.chegada - tempo_atual
             tempo_atual = processo.chegada
+        tempos_espera[i] = tempo_atual - processo.chegada
         tempo_inicio = tempo_atual
         sequencia_execucao.append((processo.id, tempo_inicio, tempo_inicio + processo.burst_time))
         tempo_fim = processo.burst_time + tempo_inicio
@@ -123,21 +123,21 @@ def round_robin(processos, quantum):
 def calcular_metricas(sequencia, espera, retorno, numero_de_processos):
 
     media_espera = np.mean(espera)
-    desvio_espera = np.std(espera)
+    soma_espera = np.sum(espera)
     media_retorno = np.mean(retorno)
-    desvio_retorno = np.std(retorno) 
+    soma_retorno = np.sum(retorno) 
     vazao = numero_de_processos/np.sum(retorno)
 
     return {
         'media_espera' : media_espera,
-        'desvio_espera' : desvio_espera,
+        'soma_espera' : soma_espera,
         'media_retorno' : media_retorno,
-        'desvio_retorno' : desvio_retorno,
+        'soma_retorno' : soma_retorno,
         'sequencia_processos': sequencia,
-        'vazao': vazao
+        'vazao': round(vazao, 6)
     }
 
-def generate_process(N, max_chegada=10,max_burst=10):
+def generate_process(N, max_chegada=100,max_burst=300):
     processos=[]
     for id in range(1,N+1):
         tempo_chegada = np.random.randint(0,max_chegada)
@@ -146,9 +146,9 @@ def generate_process(N, max_chegada=10,max_burst=10):
 
     return processos
 
-N = 5
+N = 25
 processos = generate_process(N)
-quantums = [2,5,10]
+quantums = [50,100,400]
 
 print("Processos gerados:")
 print("ID | Chegada | Burst")
@@ -174,27 +174,35 @@ for q in quantums:
 # Exibir resultados
 print("\nMétricas:")
 print("Algoritmo \t| Avg Waiting (std)\t| Avg Turnaround (std) \t| Throughput \t| Order of Execution")
-print(f"FCFS      \t| {fcfs_metricas['media_espera']:.2f}\t (±{fcfs_metricas['desvio_espera']:.2f})\t | {fcfs_metricas['media_retorno']:.2f} (±{fcfs_metricas['desvio_retorno']:.2f})\t | {fcfs_metricas['vazao']:.4f}\t | {fcfs_metricas['sequencia_processos']}")
-print(f"SJF       \t| {sjf_metricas['media_espera']:.2f} \t (±{sjf_metricas['desvio_espera']:.2f})\t | {sjf_metricas['media_retorno']:.2f} (±{sjf_metricas['desvio_retorno']:.2f})\t | {sjf_metricas['vazao']:2.4f}\t | {sjf_metricas['sequencia_processos']}")
+print(f"FCFS      \t| {fcfs_metricas['media_espera']:.2f}\t (±{fcfs_metricas['soma_espera']:.2f})\t | {fcfs_metricas['media_retorno']:.2f} (±{fcfs_metricas['soma_retorno']:.2f})\t | {fcfs_metricas['vazao']:.4f}\t | {fcfs_metricas['sequencia_processos']}")
+print(f"SJF       \t| {sjf_metricas['media_espera']:.2f} \t (±{sjf_metricas['soma_espera']:.2f})\t | {sjf_metricas['media_retorno']:.2f} (±{sjf_metricas['soma_retorno']:.2f})\t | {sjf_metricas['vazao']:2.4f}\t | {sjf_metricas['sequencia_processos']}")
 for q in quantums:
-    print(f"RR (q={q}) \t| {rr_metricas[q]['media_espera']:.2f}\t (±{rr_metricas[q]['desvio_espera']:.2f})\t | {rr_metricas[q]['media_retorno']:.2f} (±{rr_metricas[q]['desvio_retorno']:.2f})\t | {rr_metricas[q]['vazao']:2.4f}\t | {rr_metricas[q]['sequencia_processos']}")
+    print(f"RR (q={q}) \t| {rr_metricas[q]['media_espera']:.2f}\t (±{rr_metricas[q]['soma_espera']:.2f})\t | {rr_metricas[q]['media_retorno']:.2f} (±{rr_metricas[q]['soma_retorno']:.2f})\t | {rr_metricas[q]['vazao']:2.4f}\t | {rr_metricas[q]['sequencia_processos']}")
 
 metodos = ['FCFS', 'SJF', f'RR(q={quantums[0]})', f'RR(q={quantums[1]})', f'RR(q={quantums[2]})']
-tempos = [fcfs_metricas['media_espera'], sjf_metricas['media_espera'], rr_metricas[2]['media_espera'], rr_metricas[5]['media_espera'], rr_metricas[10]['media_espera']]
+tempos = [fcfs_metricas['media_espera'], sjf_metricas['media_espera'], rr_metricas[50]['media_espera'], rr_metricas[100]['media_espera'], rr_metricas[400]['media_espera']]
 plt.bar(metodos, tempos, color='skyblue')
 plt.xlabel('métodos escolhidos')
-plt.ylabel('média de tempo de espera')
-plt.title('média tempo de espera de cada algoritmo')
+plt.ylabel('media tempo de espera')
+plt.title('media tempo de espera de cada algoritmo')
 for i, value in enumerate(tempos):
     plt.text(i, value, str(value), ha='center')
 plt.show()
 
-tempos = [fcfs_metricas['media_retorno'], sjf_metricas['media_retorno'], rr_metricas[2]['media_retorno'], rr_metricas[5]['media_retorno'], rr_metricas[10]['media_retorno']]
-plt.bar(metodos, tempos, color='skyblue')
+tempos = [fcfs_metricas['media_retorno'], sjf_metricas['media_retorno'], rr_metricas[50]['media_retorno'], rr_metricas[100]['media_retorno'], rr_metricas[400]['media_retorno']]
+plt.bar(metodos, tempos, color='tomato')
 plt.xlabel('métodos escolhidos')
-plt.ylabel('média de tempo de retorno')
-plt.title('média tempo de retorno de cada algoritmo')
+plt.ylabel('media tempo de retorno')
+plt.title('media tempo de retorno de cada algoritmo')
 for i, value in enumerate(tempos):
     plt.text(i, value, str(value), ha='center')
 plt.show()
 
+tempos = [fcfs_metricas['vazao'], sjf_metricas['vazao'], rr_metricas[50]['vazao'], rr_metricas[100]['vazao'], rr_metricas[400]['vazao']]
+plt.bar(metodos, tempos, color='cyan')
+plt.xlabel('métodos escolhidos')
+plt.ylabel('vazão')
+plt.title('media tempo de retorno de cada algoritmo')
+for i, value in enumerate(tempos):
+    plt.text(i, value, str(value), ha='center')
+plt.show()
