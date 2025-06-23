@@ -202,7 +202,7 @@ tempos = [fcfs_metricas['vazao'], sjf_metricas['vazao'], rr_metricas[50]['vazao'
 plt.bar(metodos, tempos, color='cyan')
 plt.xlabel('métodos escolhidos')
 plt.ylabel('vazão')
-plt.title('media tempo de retorno de cada algoritmo')
+plt.title('vazão de cada algoritmo')
 for i, value in enumerate(tempos):
     plt.text(i, value, str(value), ha='center')
 plt.show()
