@@ -65,8 +65,3 @@ if __name__ == "__main__":
 
     print("\n--- AMOSTRA DO RASTRO DE ACESSO GERADO (primeiros 150 acessos) ---")
     print(rastro_do_processo[:150])
-
-    nome_arquivo_rastro = "rastro_paginas_A_Z_inicio.txt" # Novo nome para o arquivo
-    with open(nome_arquivo_rastro, "w") as f:
-        f.write(",".join(rastro_do_processo))
-    print(f"\nRastro salvo em '{nome_arquivo_rastro}'.")
