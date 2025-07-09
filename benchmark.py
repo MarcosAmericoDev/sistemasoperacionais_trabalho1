@@ -11,8 +11,8 @@ reload(inode_module)
 reload(encadeada_module)
 
 # Parâmetros de teste
-NUM_REPETICOES = 5
-TAMANHOS_ARQUIVOS = [1000, 10000, 100000]  # caracteres
+NUM_REPETICOES = 10
+TAMANHOS_ARQUIVOS = [100, 1000, 10000]  # caracteres
 
 
 def benchmark_write(fs_class, tamanho):
