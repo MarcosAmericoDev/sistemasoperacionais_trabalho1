@@ -109,16 +109,37 @@ class FileSystem:
         else:
             print("Directory not found.")
 
-    def mv(self, src, dest):  # Move arquivos/diretórios
+    # Função acessório para mv
+    def resolve_path(self, path):
+        parts = path.strip("/").split("/")
+        node = self.root if path.startswith("/") else self.current
+
+        for part in parts:
+            if part == '' or part == '.':
+                continue
+            elif part == '..':
+                if node.parent != '~':
+                    node = node.parent
+            elif part in node.children and node.children[part].is_dir:
+                node = node.children[part]
+            else:
+                return None
+        return node
+    
+    def mv(self, src, dest_path):
         if src not in self.current.children:
             print("Source file not found.")
             return
-        if dest not in self.current.children or not self.current.children[dest].is_dir:
+
+        dest_dir = self.resolve_path(dest_path)
+        if not dest_dir or not dest_dir.is_dir:
             print("Destination directory not found.")
             return
+
         inode = self.current.children.pop(src)
-        inode.parent = self.current.children[dest]  # Atualiza o parent
-        self.current.children[dest].children[src] = inode
+        dest_dir.children[src] = inode
+        inode.parent = dest_dir
+
 
     def write(self, name, data): # Escreve dentro de um arquivo
         if name in self.current.children and not self.current.children[name].is_dir:

@@ -1,14 +1,14 @@
 import uuid
 
 class Inode:
-    def __init__(self, name, is_dir):
+    def __init__(self, name, is_dir, parent='~'):
         self.id = uuid.uuid4()
         self.name = name
         self.is_dir = is_dir
         self.size = 0
         self.data_blocks = []
         self.children = {} if is_dir else None
-        self.parent = None
+        self.parent = parent
         self.content = "" if not is_dir else None
         self.blocks = []
 
@@ -28,13 +28,13 @@ class FileSystem:
         if name in self.current.children:
             print("Directory already exists.")
         else: 
-            self.current.children[name] = Inode(name, True)
+            self.current.children[name] = Inode(name, True, self.current)
 
     def touch(self, name): # Cria um novo arquivo
         if name in self.current.children:
             print("File already exists.")
         else:
-            self.current.children[name] = Inode(name, False)
+            self.current.children[name] = Inode(name, False, self.current)
     
     def ls(self): # Lista os filhos do diretório atual
         for name in self.current.children:
@@ -53,16 +53,36 @@ class FileSystem:
             self.path.append(self.current)
         else:
             print("Directory not found.")
+    
+    # Função acessório para mv
+    def resolve_path(self, path):
+        parts = path.strip("/").split("/")
+        node = self.root if path.startswith("/") else self.current
 
-    def mv(self, src, dest): # Move arquivos/diretórios
+        for part in parts:
+            if part == '' or part == '.':
+                continue
+            elif part == '..':
+                if node.parent != '~':
+                    node = node.parent
+            elif part in node.children and node.children[part].is_dir:
+                node = node.children[part]
+            else:
+                return None
+        return node
+    def mv(self, src, dest_path):
         if src not in self.current.children:
             print("Source file not found.")
             return
-        if dest not in self.current.children or not self.current.children[dest].is_dir:
+
+        dest_dir = self.resolve_path(dest_path)
+        if not dest_dir or not dest_dir.is_dir:
             print("Destination directory not found.")
             return
+
         inode = self.current.children.pop(src)
-        self.current.children[dest].children[src] = inode
+        dest_dir.children[src] = inode
+        inode.parent = dest_dir
 
     def write(self, name, data): # Escreve dentro de um arquivo
         if name in self.current.children and not self.current.children[name].is_dir:
@@ -80,10 +100,34 @@ class FileSystem:
             print("File not found.")
 
     def rm(self, name): # Remove arquivo ou diretório
+        # Deve haver recursividade, quando o diretorio tiver arquivos dentro dele
         if name in self.current.children:
+            def _recursive_delete(inode):
+                if inode.is_dir:
+                    for child in list(inode.children.values()):
+                            _recursive_delete(child)
+                    inode.children.clear()
+                    inode.content = ""
+                    inode.size = 0
+                    inode.blocks = []
+
+            inode = self.current.children[name]
+            _recursive_delete(inode)
             del self.current.children[name]
         else:
             print("File or directory not found.")
+
+    def inode(self, name): # Comando para verificar o inode do arquivo ou diretório
+        
+        if len(name) == 1 and name == ".":
+            print(f"Informações do INode: \nId\t\t{self.current.id}\nName\t\t{name}\nIs_dir\t\t{self.current.is_dir}\nParent\t\t{self.current.parent}\nContent\t\t{self.current.content}\nBlocks\t\t{self.current.blocks}\n")
+        if name in self.current.children:
+            print(f"Informações do INode: \nId\t\t{self.current.children[name].id}\nName\t\t{name}\nIs_dir\t\t{self.current.children[name].is_dir}\nParent\t\t{self.current.children[name].parent}\nContent\t\t{self.current.children[name].content}\nBlocks\t\t{self.current.children[name].blocks}\n")
+        else:
+            print("Directory not found.")
+
+    def pwd(self):
+        print(self._get_path_str())
 
     def run(self):
         while True:
@@ -119,6 +163,11 @@ class FileSystem:
                 case 'rm':
                     if args:
                         self.rm(args[0])
+                case 'inode':
+                    if args:
+                        self.inode(args[0])
+                case 'pwd':
+                    self.pwd()
                 case _:
                     print("Invalid command or arguments")
 
