@@ -1,4 +1,5 @@
 import uuid
+from random import randint
 
 class Inode:
     def __init__(self, name, is_dir, parent='~'):
@@ -10,16 +11,25 @@ class Inode:
         self.children = {} if is_dir else None
         self.parent = parent
         self.content = "" if not is_dir else None
-        self.blocks = []
 
     def __repr__(self):
         return f"{'[DIR]' if self.is_dir else '[FILE]'} {self.name} (size: {self.size})"
+
+NUMBER_INODES = 3
 
 class FileSystem:
     def __init__(self):
         self.root = Inode("/", True)
         self.current = self.root
         self.path = [self.root]
+        self.available_space = NUMBER_INODES
+        self.list_allocated_inodes = [-1] * NUMBER_INODES
+        print(f"available space: {self.available_space}")
+
+    def space_can_use(self):
+        print(f"available space: {self.available_space}")
+        for index, inode_id in enumerate(self.list_allocated_inodes):
+            print(f"index {index}: id {inode_id}")
 
     def _get_path_str(self): # Mostra o caminho atual no path
         return "/" + "/".join(node.name for node in self.path[1:])
@@ -27,14 +37,30 @@ class FileSystem:
     def mkdir(self, name): # Cria um novo diretório
         if name in self.current.children:
             print("Directory already exists.")
+        elif self.available_space > 0: #Se tiver espaço disponível, vai passar desse if
+            for i, value in enumerate(self.list_allocated_inodes):
+                if value == -1:
+                    new_inode = Inode(name, True, self.current)
+                    self.list_allocated_inodes[i] = new_inode.id
+                    self.current.children[name] = new_inode
+                    self.available_space -= 1
+                    break
         else: 
-            self.current.children[name] = Inode(name, True, self.current)
-
+            print("No free space available.")
+        
     def touch(self, name): # Cria um novo arquivo
         if name in self.current.children:
             print("File already exists.")
-        else:
-            self.current.children[name] = Inode(name, False, self.current)
+        elif self.available_space > 0: #Se tiver espaço disponível, vai passar desse if
+            for i, value in enumerate(self.list_allocated_inodes):
+                if value == -1:
+                    new_inode = Inode(name, False, self.current)
+                    self.list_allocated_inodes[i] = new_inode.id
+                    self.current.children[name] = new_inode
+                    self.available_space -= 1
+                    break
+        else: 
+            print("No free space available.")
     
     def ls(self): # Lista os filhos do diretório atual
         for name in self.current.children:
@@ -84,6 +110,7 @@ class FileSystem:
         dest_dir.children[src] = inode
         inode.parent = dest_dir
 
+
     def write(self, name, data): # Escreve dentro de um arquivo
         if name in self.current.children and not self.current.children[name].is_dir:
             inode = self.current.children[name]
@@ -109,7 +136,11 @@ class FileSystem:
                     inode.children.clear()
                     inode.content = ""
                     inode.size = 0
-                    inode.blocks = []
+                    self.available_space += 1
+                    for i, value in enumerate(self.list_allocated_inodes):
+                        if value == inode.id:
+                            self.list_allocated_inodes[i] = -1
+                    inode.id = -1
 
             inode = self.current.children[name]
             _recursive_delete(inode)
@@ -120,9 +151,9 @@ class FileSystem:
     def inode(self, name): # Comando para verificar o inode do arquivo ou diretório
         
         if len(name) == 1 and name == ".":
-            print(f"Informações do INode: \nId\t\t{self.current.id}\nName\t\t{name}\nIs_dir\t\t{self.current.is_dir}\nParent\t\t{self.current.parent}\nContent\t\t{self.current.content}\nBlocks\t\t{self.current.blocks}\n")
+            print(f"Informações do INode: \nId\t\t{self.current.id}\nName\t\t{name}\nIs_dir\t\t{self.current.is_dir}\nParent\t\t{self.current.parent}\nContent\t\t{self.current.content}\n")
         if name in self.current.children:
-            print(f"Informações do INode: \nId\t\t{self.current.children[name].id}\nName\t\t{name}\nIs_dir\t\t{self.current.children[name].is_dir}\nParent\t\t{self.current.children[name].parent}\nContent\t\t{self.current.children[name].content}\nBlocks\t\t{self.current.children[name].blocks}\n")
+            print(f"Informações do INode: \nId\t\t{self.current.children[name].id}\nName\t\t{name}\nIs_dir\t\t{self.current.children[name].is_dir}\nParent\t\t{self.current.children[name].parent}\nContent\t\t{self.current.children[name].content}\n")
         else:
             print("Directory not found.")
 
@@ -140,6 +171,8 @@ class FileSystem:
             match command:
                 case 'exit': # Finaliza a execução
                     break
+                case 'space':
+                    self.space_can_use()
                 case 'cd':
                     if args:
                         self.cd(args[0])
