@@ -1,7 +1,7 @@
 import uuid
 
-BLOCK_SIZE = 2
-MAX_BLOCKS = 32
+BLOCK_SIZE = 4
+MAX_BLOCKS = 16
 
 class Block:
     def __init__(self, data='', next = None):
@@ -34,7 +34,7 @@ class FileSystem:
         if not self.free_space:
             print("Error: No free space available on disk.")
             return None
-        idx = self.free_space.pop()
+        idx = self.free_space.pop(0)
         self.disk[idx] = Block(data)
         return idx
 
@@ -112,12 +112,17 @@ class FileSystem:
         for name in self.current.children:
             inode = self.current.children[name]
             print(f"{name}/" if inode.is_dir else name)
+
     def space(self):
-        used = [i for i in range(len(self.disk)) if self.disk[i] is not None]
         print(f"Total blocks: {len(self.disk)}")
-        print(f"Used blocks: {len(used)}")
-        print(f"Free blocks: {len(self.free_space)}")
-        print("Used indexes:", used)
+        print(f"Free blocks: {len(self.free_space)} - {sorted(self.free_space)}")
+        print("Disk blocks status:")
+        for i, block in enumerate(self.disk):
+            if block is None:
+                print(f"  Block {i}: [FREE]")
+            else:
+                print(f"  Block {i}: [USED] Content: '{block.data}' Next: {block.next}")
+
 
     def cd(self, name): # Navega entre os repositórios
         if name == "..":
