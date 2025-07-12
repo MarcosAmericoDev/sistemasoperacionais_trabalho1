@@ -131,13 +131,13 @@ class FileSystem:
                     for child in list(inode.children.values()):
                             _recursive_delete(child)
                     inode.children.clear()
-                    inode.content = ""
-                    inode.size = 0
-                    self.available_space += 1
-                    for i, value in enumerate(self.list_allocated_inodes):
-                        if value == inode.id:
-                            self.list_allocated_inodes[i] = -1
-                    inode.id = -1
+                inode.content = ""
+                inode.size = 0
+                self.available_space += 1
+                for i, value in enumerate(self.list_allocated_inodes):
+                    if value == inode.id:
+                        self.list_allocated_inodes[i] = -1
+                inode.id = -1
 
             inode = self.current.children[name]
             _recursive_delete(inode)
