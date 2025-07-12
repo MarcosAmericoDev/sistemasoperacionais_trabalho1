@@ -1,5 +1,4 @@
 import uuid
-from random import randint
 
 class Inode:
     def __init__(self, name, is_dir, parent='~'):
@@ -7,7 +6,6 @@ class Inode:
         self.name = name
         self.is_dir = is_dir
         self.size = 0
-        self.data_blocks = []
         self.children = {} if is_dir else None
         self.parent = parent
         self.content = "" if not is_dir else None
@@ -116,7 +114,6 @@ class FileSystem:
             inode = self.current.children[name]
             inode.content += data
             inode.size = len(inode.content)
-            inode.blocks = list(range(0, inode.size, 4))
         else:
             print("File not found.")
 
